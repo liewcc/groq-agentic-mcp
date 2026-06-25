@@ -26,6 +26,12 @@ With the Groq MCP server you can try tasks like:
 ### Batch Processing
 - "Process the following batch of prompts: [location of a jsonlines file]" (read more [here](https://console.groq.com/docs/batch))
 
+### Local Tools
+- "Run `git status` in my project folder" — executes shell commands on the local machine via `run_shell_command` (PowerShell on Windows, bash on macOS/Linux)
+- "Read the contents of config.json" — returns a local file's content to the LLM via `read_file`
+- "Save this summary to output.txt" — writes text to a local file path via `write_file`
+- "What Groq chat models do I have access to?" — `list_chat_models` queries `/v1/models` live (no hardcoded whitelist)
+
 
 
 ## Quickstart with Claude Desktop
@@ -85,8 +91,10 @@ That's it! Your MCP client can now use these Groq capabilities:
 - 🗣️ Text-to-Speech (TTS): Fast, natural-sounding speech synthesis
 - 👂 Speech-to-Text (STT): Accurate transcription and translation
 - 🖼️ Vision: Advanced image analysis and understanding
-- 💬 Chat: Ultra-fast LLM inference with Llama 4 and more
+- 💬 Chat: Ultra-fast LLM inference with Llama 4 and more (model list fetched live from your account)
 - 📦 Batch: Process large workloads efficiently
+- 🖥️ Local Shell: Run shell commands on the local machine (PowerShell / bash)
+- 📁 File I/O: Read and write local files directly from the LLM
 
 
 ## Contributing
@@ -124,7 +132,7 @@ If you want to contribute or run from source:
      ```cmd
      .\install.bat
      ```
-   *(On macOS, this writes to `~/Library/Application Support/Claude/claude_desktop_config.json`. On Windows, this writes to `%APPDATA%\Claude\logs\../claude_desktop_config.json`. Make sure to restart or refresh Claude Desktop afterward).*
+   *(On macOS, this writes to `~/Library/Application Support/Claude/claude_desktop_config.json`. On Windows, this writes to `%APPDATA%\Claude\logs\../claude_desktop_config.json`. Make sure to restart or refresh Claude Desktop afterward. The install script also automatically injects the Groq MCP config into the [Antigravity CLI](https://antigravity.dev) `mcp.json` if present).*
 
 4. Copy `.env.example` to `.env` and add your Groq API key:
    - **On macOS/Linux**:
