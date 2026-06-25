@@ -16,18 +16,15 @@ def decode_bytes(data: bytes) -> str:
         return data.decode("utf-8")
     except UnicodeDecodeError:
         pass
-    
     preferred = locale.getpreferredencoding()
     try:
         return data.decode(preferred)
     except UnicodeDecodeError:
         pass
-        
     try:
         return data.decode("gbk")
     except UnicodeDecodeError:
         pass
-        
     return data.decode("utf-8", errors="replace")
 
 def run_shell_command(command: str, working_dir: str | None = None, timeout: int = 30) -> str:
@@ -36,22 +33,19 @@ def run_shell_command(command: str, working_dir: str | None = None, timeout: int
         actual_cwd = None
         if working_dir:
             actual_cwd = os.path.abspath(os.path.expanduser(working_dir))
-            
+        prefixed_command = '$OutputEncoding = [System.Text.Encoding]::UTF8; [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; ' + command
         result = subprocess.run(
-            ['powershell', '-NoProfile', '-Command', command],
+            ['powershell', '-NoProfile', '-NonInteractive', '-Command', prefixed_command],
             capture_output=True,
             cwd=actual_cwd,
             timeout=timeout
         )
-        
         stdout = decode_bytes(result.stdout)
         stderr = decode_bytes(result.stderr)
-        
         if result.returncode == 0:
-            return stdout
+            return stdout if stdout else stderr
         else:
             return f"exit {result.returncode}\n{stderr}"
-            
     except subprocess.TimeoutExpired as e:
         stdout = decode_bytes(e.stdout) if e.stdout else ""
         stderr = decode_bytes(e.stderr) if e.stderr else ""
