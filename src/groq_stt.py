@@ -72,28 +72,29 @@ def transcribe_audio(
     file_path = handle_input_file(input_file_path, audio_content_check=True)
     
     # Prepare the files for the multipart request
-    files = {
-        "file": (file_path.name, open(file_path, "rb"), "audio/mpeg"),
-        "model": (None, model),
-        "response_format": (None, response_format),
-        "temperature": (None, str(temperature)),
-    }
-    
-    # Add optional parameters
-    if language:
-        files["language"] = (None, language)
-    if prompt:
-        files["prompt"] = (None, prompt)
-    if timestamp_granularities and response_format == "verbose_json":
-        for granularity in timestamp_granularities:
-            files["timestamp_granularities[]"] = (None, granularity)
+    with open(file_path, "rb") as f:
+        files = {
+            "file": (file_path.name, f, "audio/mpeg"),
+            "model": (None, model),
+            "response_format": (None, response_format),
+            "temperature": (None, str(temperature)),
+        }
+        
+        # Add optional parameters
+        if language:
+            files["language"] = (None, language)
+        if prompt:
+            files["prompt"] = (None, prompt)
+        if timestamp_granularities and response_format == "verbose_json":
+            for granularity in timestamp_granularities:
+                files["timestamp_granularities[]"] = (None, granularity)
 
-    # Make the API request
-    response = httpx.post(
-        "https://api.groq.com/openai/v1/audio/transcriptions",
-        headers={"Authorization": f"Bearer {groq_api_key}"},
-        files=files
-    )
+        # Make the API request
+        response = httpx.post(
+            "https://api.groq.com/openai/v1/audio/transcriptions",
+            headers={"Authorization": f"Bearer {groq_api_key}"},
+            files=files
+        )
     
     # Check for errors
     if response.status_code != 200:
@@ -158,23 +159,24 @@ def translate_audio(
     file_path = handle_input_file(input_file_path, audio_content_check=True)
     
     # Prepare the files for the multipart request
-    files = {
-        "file": (file_path.name, open(file_path, "rb"), "audio/mpeg"),
-        "model": (None, model),
-        "response_format": (None, response_format),
-        "temperature": (None, str(temperature)),
-    }
-    
-    # Add optional parameters
-    if prompt:
-        files["prompt"] = (None, prompt)
-    
-    # Make the API request
-    response = httpx.post(
-        "https://api.groq.com/openai/v1/audio/translations",
-        headers={"Authorization": f"Bearer {groq_api_key}"},
-        files=files
-    )
+    with open(file_path, "rb") as f:
+        files = {
+            "file": (file_path.name, f, "audio/mpeg"),
+            "model": (None, model),
+            "response_format": (None, response_format),
+            "temperature": (None, str(temperature)),
+        }
+        
+        # Add optional parameters
+        if prompt:
+            files["prompt"] = (None, prompt)
+        
+        # Make the API request
+        response = httpx.post(
+            "https://api.groq.com/openai/v1/audio/translations",
+            headers={"Authorization": f"Bearer {groq_api_key}"},
+            files=files
+        )
     
     # Check for errors
     if response.status_code != 200:

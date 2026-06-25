@@ -20,7 +20,7 @@ def test_chat_completion(temp_dir, mock_groq_api_key, mock_httpx_client):
     
     result = chat_completion(
         messages=messages,
-        model="gemma2-9b-it",
+        model="llama-3.1-8b-instant",
         output_directory=str(temp_dir)
     )
     
@@ -58,7 +58,7 @@ def test_chat_completion_with_system(temp_dir, mock_groq_api_key, mock_httpx_cli
     
     result = chat_completion(
         messages=messages,
-        model="gemma2-9b-it",
+        model="llama-3.1-8b-instant",
         output_directory=str(temp_dir)
     )
     
@@ -80,7 +80,7 @@ def test_invalid_messages(temp_dir, mock_groq_api_key, mock_httpx_client):
         with pytest.raises(MCPError):
             chat_completion(
                 messages=messages,
-                model="gemma2-9b-it",
+                model="llama-3.1-8b-instant",
                 output_directory=str(temp_dir)
             )
 
@@ -122,7 +122,7 @@ def test_chat_completion_integration(temp_dir, mock_groq_api_key):
     
     result = chat_completion(
         messages=messages,
-        model="gemma2-9b-it",
+        model="llama-3.1-8b-instant",
         temperature=0,  # Use 0 for more consistent results
         output_directory=str(temp_dir)
     )
