@@ -103,26 +103,40 @@ If you want to contribute or run from source:
    cd groq-mcp
    ```
 
-2. Run the setup script:
-   ```bash
-   ./scripts/setup.sh
-   ```
-   This will:
-   - Create a Python virtual environment using `uv`
-   - Install all dependencies
-   - Set up pre-commit hooks
-   - Activate the virtual environment
+2. Run the setup script to initialize the virtual environment and install all dependencies:
+   - **On macOS/Linux**:
+     ```bash
+     ./scripts/Linux_setup.sh
+     ```
+   - **On Windows**:
+     ```cmd
+     .\win_setup.bat
+     ```
 
-3. Run the Claude install script:
-   ```bash
-   ./scripts/install.sh
-   ```
-   On Macs, this will install the Groq MCP server in Claude Desktop, at `~/Library/Application Support/Claude/claude_desktop_config.json`. Make sure to refresh or restart Claude Desktop.
+   *(This creates a `.venv` directory, installs the core and dev dependencies, and configures pre-commit hooks).*
+
+3. Run the Claude install script to register the Groq MCP server with Claude Desktop:
+   - **On macOS/Linux**:
+     ```bash
+     ./scripts/install.sh
+     ```
+   - **On Windows**:
+     ```cmd
+     .\install.bat
+     ```
+   *(On macOS, this writes to `~/Library/Application Support/Claude/claude_desktop_config.json`. On Windows, this writes to `%APPDATA%\Claude\logs\../claude_desktop_config.json`. Make sure to restart or refresh Claude Desktop afterward).*
 
 4. Copy `.env.example` to `.env` and add your Groq API key:
-   ```bash
-   cp .env.example .env
+   - **On macOS/Linux**:
+     ```bash
+     cp .env.example .env
+     ```
+   - **On Windows**:
+     ```cmd
+     copy .env.example .env
+     ```
    # Edit .env and add your API key
+
    ```
 
 #### Option 2: Manual Setup

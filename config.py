@@ -63,6 +63,51 @@ def generate_config(api_key: str | None = None):
     return config
 
 
+def update_antigravity_config(api_key: str):
+    """Update Antigravity CLI configuration file if the application directory exists."""
+    antigravity_dir = Path(Path.home(), ".gemini", "antigravity-cli")
+    if not antigravity_dir.exists():
+        return
+
+    mcp_json_path = antigravity_dir / "mcp.json"
+    
+    module_dir = Path(__file__).resolve().parent
+    server_path = module_dir / "server.py"
+    python_path = get_python_path()
+    
+    # Read existing config or initialize
+    if mcp_json_path.exists():
+        try:
+            with open(mcp_json_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception as e:
+            print(f"Warning: Failed to read Antigravity config: {e}. Reinitializing...")
+            data = {}
+    else:
+        data = {}
+
+    if "mcpServers" not in data or not isinstance(data["mcpServers"], dict):
+        data["mcpServers"] = {}
+
+    # Update groq-mcp configuration
+    data["mcpServers"]["groq-mcp"] = {
+        "command": python_path,
+        "args": [str(server_path)],
+        "cwd": str(module_dir),
+        "env": {
+            "GROQ_API_KEY": api_key,
+            "BASE_OUTPUT_PATH": str(Path.home() / "Desktop"),
+        }
+    }
+
+    try:
+        with open(mcp_json_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        print(f"Successfully updated Antigravity config at {mcp_json_path}")
+    except Exception as e:
+        print(f"Warning: Failed to write Antigravity config: {e}")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Groq MCP server config for Claude")
     parser.add_argument(
@@ -86,21 +131,40 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    # Get API key to pass to config generator and Antigravity updater
+    final_api_key = args.api_key or os.environ.get("GROQ_API_KEY")
     config = generate_config(args.api_key)
 
     if args.print:
         print(json.dumps(config, indent=2))
     else:
         claude_path = args.config_path if args.config_path else get_claude_config_path()
-        if claude_path is None:
-            print(
-                "Could not find Claude config path automatically. Please specify it using --config-path argument. "
-                "The argument should be an absolute path of the claude_desktop_config.json file."
-            )
-            sys.exit(1)
+        if claude_path is not None:
+            claude_path.mkdir(parents=True, exist_ok=True)
+            config_file = claude_path / "claude_desktop_config.json"
+            print(f"Writing config to {config_file}")
+            try:
+                # Merge into existing Claude config if it exists
+                if config_file.exists():
+                    with open(config_file, "r", encoding="utf-8") as f:
+                        existing = json.load(f)
+                else:
+                    existing = {}
+                
+                if "mcpServers" not in existing or not isinstance(existing["mcpServers"], dict):
+                    existing["mcpServers"] = {}
+                
+                existing["mcpServers"].update(config["mcpServers"])
+                
+                with open(config_file, "w", encoding="utf-8") as f:
+                    json.dump(existing, f, indent=2)
+                print(f"Successfully updated Claude config at {config_file}")
+            except Exception as e:
+                print(f"Warning: Failed to write Claude config: {e}")
+        else:
+            print("Could not find Claude config path automatically.")
 
-        claude_path.mkdir(parents=True, exist_ok=True)
-        config_file = claude_path / "claude_desktop_config.json"
-        print(f"Writing config to {config_file}")
-        with open(config_file, "w") as f:
-            json.dump(config, f, indent=2) 
+        # Also update Antigravity config if available
+        if final_api_key:
+            update_antigravity_config(final_api_key)
+ 
