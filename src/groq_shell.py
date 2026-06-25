@@ -2,6 +2,9 @@
 Groq Shell Module
 
 This module provides tools for executing local shell commands, reading files, and writing files.
+
+Shell engine: cmd.exe (shell=True) for correct stdout inheritance on Windows.
+PowerShell cmdlets can be invoked with: powershell -NoProfile -Command "Get-ChildItem ..."
 """
 
 import os
@@ -13,6 +16,7 @@ _EXTRA_PATHS = [
     r"C:\Program Files\Git\cmd",
     r"C:\Program Files\GitHub CLI",
     r"C:\Windows\System32",
+    r"C:\Users\cclie\AppData\Local\Programs\Python\Python314",
 ]
 
 def _make_env() -> dict:
@@ -22,15 +26,6 @@ def _make_env() -> dict:
     if additions:
         env["PATH"] = additions + ";" + existing
     return env
-
-def _wrap(command: str) -> str:
-    # External exe stdout goes through PowerShell's object pipeline, not Console.Out,
-    # so capture_output=True misses it. Wrap in $() to collect all output, then write
-    # via [Console]::Write which maps directly to the subprocess stdout pipe.
-    return (
-        f'$__out = $( {command} ); '
-        f'if ($null -ne $__out) {{ [Console]::Write(($__out | Out-String)) }}'
-    )
 
 def decode_bytes(data: bytes) -> str:
     """Decode raw bytes into a string with fallbacks."""
@@ -52,13 +47,19 @@ def decode_bytes(data: bytes) -> str:
     return data.decode("utf-8", errors="replace")
 
 def run_shell_command(command: str, working_dir: str | None = None, timeout: int = 30) -> str:
-    """执行本地 shell 命令，返回 stdout/stderr 合并结果。"""
+    """执行本地 shell 命令，返回 stdout/stderr 合并结果。
+
+    Uses cmd.exe (shell=True) so native executables (git, gh, python, etc.) have
+    their stdout properly captured. For PowerShell cmdlets, prefix with:
+      powershell -NoProfile -Command \"Get-ChildItem ...\"
+    """
     try:
         actual_cwd = None
         if working_dir:
             actual_cwd = os.path.abspath(os.path.expanduser(working_dir))
         result = subprocess.run(
-            ['powershell', '-NoProfile', '-NonInteractive', '-Command', _wrap(command)],
+            command,
+            shell=True,
             capture_output=True,
             env=_make_env(),
             cwd=actual_cwd,
