@@ -25,6 +25,9 @@ def _make_env() -> dict:
     additions = ";".join(p for p in _EXTRA_PATHS if os.path.isdir(p))
     if additions:
         env["PATH"] = additions + ";" + existing
+    # Prevent git from blocking on credential/SSH prompts in a non-TTY subprocess
+    env.setdefault("GIT_TERMINAL_PROMPT", "0")
+    env.setdefault("GIT_ASKPASS", "echo")
     return env
 
 def decode_bytes(data: bytes) -> str:
@@ -61,6 +64,7 @@ def run_shell_command(command: str, working_dir: str | None = None, timeout: int
             command,
             shell=True,
             capture_output=True,
+            stdin=subprocess.DEVNULL,  # prevent MSYS2/ConPTY handle inheritance hang
             env=_make_env(),
             cwd=actual_cwd,
             timeout=timeout
