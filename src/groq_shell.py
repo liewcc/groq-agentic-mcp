@@ -8,6 +8,20 @@ import os
 import subprocess
 import locale
 
+# Common Windows tool paths injected into subprocess PATH so bare commands work
+_EXTRA_PATHS = [
+    r"C:\Program Files\Git\cmd",
+    r"C:\Program Files\GitHub CLI",
+]
+
+def _make_env() -> dict:
+    env = os.environ.copy()
+    existing = env.get("PATH", "")
+    additions = ";".join(p for p in _EXTRA_PATHS if os.path.isdir(p))
+    if additions:
+        env["PATH"] = additions + ";" + existing
+    return env
+
 def decode_bytes(data: bytes) -> str:
     """Decode raw bytes into a string with fallbacks."""
     if not data:
@@ -33,10 +47,10 @@ def run_shell_command(command: str, working_dir: str | None = None, timeout: int
         actual_cwd = None
         if working_dir:
             actual_cwd = os.path.abspath(os.path.expanduser(working_dir))
-        prefixed_command = '$OutputEncoding = [System.Text.Encoding]::UTF8; [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; ' + command
         result = subprocess.run(
-            ['powershell', '-NoProfile', '-NonInteractive', '-Command', prefixed_command],
+            ['powershell', '-NoProfile', '-NonInteractive', '-Command', command],
             capture_output=True,
+            env=_make_env(),
             cwd=actual_cwd,
             timeout=timeout
         )
